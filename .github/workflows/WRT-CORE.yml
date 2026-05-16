@@ -46,6 +46,7 @@ on:
       WRT_ARCH:
         required: false
         type: string
+
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   WRT_CONFIG: ${{inputs.WRT_CONFIG}}
@@ -89,6 +90,7 @@ jobs:
 
       - name: Checkout Projects
         uses: actions/checkout@main
+
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -103,10 +105,6 @@ jobs:
           sudo bash $GITHUB_WORKSPACE/Scripts/init_build_environment.sh
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
-#          sudo chown $USER:$GROUPS $GITHUB_WORKSPACE
-#          sudo mkdir -p /mnt/build_wrt
-#          sudo chown $USER:$USER /mnt/build_wrt
-#          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
 
       - name: Initialization Values
         run: |
@@ -116,33 +114,30 @@ jobs:
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
-
           echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
+
           [[ -z $WRT_ARCH ]] && {
             export WRT_ARCH=$(sed -n 's/.*_DEVICE_\(.*\)_DEVICE_.*/\1/p' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -n 1)
             echo "WRT_ARCH=$WRT_ARCH" >> $GITHUB_ENV
           }
+
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
+
       - name: Clone Code
         run: |
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
           cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-
-#############################测试代码####
       - name: Update Dae/Daed rules
         run: |
-         cd ./wrt
-         mkdir -p files/usr/share/dae
-         wget -O files/usr/share/dae/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
-         wget -O files/usr/share/dae/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
-         cd files/usr/share
-         ln -s dae daed
-         ls -l
-
-
-#############################测试代码####
+          cd ./wrt
+          mkdir -p files/usr/share/dae
+          wget -O files/usr/share/dae/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+          wget -O files/usr/share/dae/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+          cd files/usr/share
+          ln -s dae daed
+          ls -l
 
       - name: Check Scripts
         run: |
@@ -164,9 +159,7 @@ jobs:
             find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r dir; do
                 find "$dir" -type f -exec touch {} +
             done
-          fi            
-
-
+          fi
 
       - name: Update Feeds
         run: |
@@ -186,10 +179,60 @@ jobs:
         run: |
           . $GITHUB_WORKSPACE/Scripts/function.sh
           cd ./wrt/
-          
+
           generate_config && cat .config
-          
+
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+
+          echo "==== Set custom Chinese firmware version ===="
+
+          mkdir -p package/base-files/files/etc
+          mkdir -p package/base-files/files/etc/uci-defaults
+
+          cat > package/base-files/files/etc/openwrt_release <<EOF
+DISTRIB_ID='阿宇定制固件'
+DISTRIB_RELEASE='兆能M2专用版'
+DISTRIB_REVISION='ZNM2'
+DISTRIB_TARGET='qualcommax/ipq60xx'
+DISTRIB_ARCH='aarch64_cortex-a53'
+DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
+DISTRIB_TAINTS=''
+EOF
+
+          cat > package/base-files/files/etc/openwrt_version <<EOF
+阿宇定制固件 兆能M2专用版
+EOF
+
+          cat > package/base-files/files/etc/uci-defaults/99-custom-version <<'EOF'
+#!/bin/sh
+
+cat > /etc/openwrt_release <<'EOR'
+DISTRIB_ID='阿宇定制固件'
+DISTRIB_RELEASE='兆能M2专用版'
+DISTRIB_REVISION='ZNM2'
+DISTRIB_TARGET='qualcommax/ipq60xx'
+DISTRIB_ARCH='aarch64_cortex-a53'
+DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
+DISTRIB_TAINTS=''
+EOR
+
+echo '阿宇定制固件 兆能M2专用版' > /etc/openwrt_version
+
+if [ -f /usr/lib/lua/luci/version.lua ]; then
+    sed -i "s|^luciname *=.*|luciname = '阿宇定制面板'|g" /usr/lib/lua/luci/version.lua
+    sed -i "s|^luciversion *=.*|luciversion = '兆能M2专用版'|g" /usr/lib/lua/luci/version.lua
+fi
+
+exit 0
+EOF
+
+          chmod +x package/base-files/files/etc/uci-defaults/99-custom-version
+
+          echo "==== Remove DaeWRT build mark if exists ===="
+          grep -R "DaeWRT" -n package/base-files/files files package 2>/dev/null || true
+          find package/base-files/files files package -type f 2>/dev/null | xargs -r sed -i \
+            -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" \
+            -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
@@ -200,9 +243,6 @@ jobs:
 
           make download -j$(nproc)
 
-
-#############################测试代码####
-          
       - name: Update Dae core
         run: |
           cd ./wrt/
@@ -212,8 +252,6 @@ jobs:
           mv dae-linux-arm64 files/usr/bin/dae
           chmod +x files/usr/bin/dae
           rm -f dae.zip
-          
-#############################测试代码####    
 
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
@@ -224,11 +262,10 @@ jobs:
 
       - name: Delete Old Cache
         run: |
-          # 获取缓存列表并删除
           gh cache list --key ${{ env.WRT_ARCH }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
             gh cache delete "$key"
           done
-          # 输出缓存状态
+
           echo "========cache status========"
           echo "ccache: $(du -sh ./wrt/.ccache | cut -f 1)"
           echo "staging: $(du -sh ./wrt/staging_dir | cut -f 1)"
@@ -275,11 +312,9 @@ jobs:
           tag_name: ${{env.CI_NAME}}-${{env.WRT_CONFIG}}_${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            京东云亚瑟AX1800pro专属固件包
-            代码来自Davidtall、VIKINGYFY
-            适度精简，确保最大性能发挥，开启内核eBPF，Dae吃鹅优选，建议硬改1GB内存的使用
-            刷机前请更换分区表和uboot,参考链接: https://www.right.com.cn/forum/thread-8402269-1-1.html            
-            全系带开源硬件加速。
+            兆能 M2 专属定制固件包
+            默认主题：Aurora
+            默认地址：${{env.WRT_IP}}
 
             源码：${{env.WRT_REPO}}
             分支：${{env.WRT_BRANCH}}
@@ -291,9 +326,5 @@ jobs:
             登录地址：${{env.WRT_IP}}
             登录密码：${{env.WRT_PW}}
 
-            WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
-
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
-
