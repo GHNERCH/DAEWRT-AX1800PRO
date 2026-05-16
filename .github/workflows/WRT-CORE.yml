@@ -114,12 +114,13 @@ jobs:
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
-
           echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
+
           [[ -z $WRT_ARCH ]] && {
             export WRT_ARCH=$(sed -n 's/.*_DEVICE_\(.*\)_DEVICE_.*/\1/p' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -n 1)
             echo "WRT_ARCH=$WRT_ARCH" >> $GITHUB_ENV
           }
+
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
 
       - name: Clone Code
@@ -135,7 +136,7 @@ jobs:
           wget -O files/usr/share/dae/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
           wget -O files/usr/share/dae/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
           cd files/usr/share
-          ln -s dae daed
+          ln -sf dae daed
           ls -l
 
       - name: Check Scripts
@@ -188,50 +189,48 @@ jobs:
           mkdir -p package/base-files/files/etc
           mkdir -p package/base-files/files/etc/uci-defaults
 
-          cat > package/base-files/files/etc/openwrt_release <<'EOF'
-          DISTRIB_ID='阿宇定制固件'
-          DISTRIB_RELEASE='兆能M2专用版'
-          DISTRIB_REVISION='ZNM2'
-          DISTRIB_TARGET='qualcommax/ipq60xx'
-          DISTRIB_ARCH='aarch64_cortex-a53'
-          DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
-          DISTRIB_TAINTS=''
-          EOF
+          {
+            printf "%s\n" "DISTRIB_ID='阿宇定制固件'"
+            printf "%s\n" "DISTRIB_RELEASE='兆能M2专用版'"
+            printf "%s\n" "DISTRIB_REVISION='ZNM2'"
+            printf "%s\n" "DISTRIB_TARGET='qualcommax/ipq60xx'"
+            printf "%s\n" "DISTRIB_ARCH='aarch64_cortex-a53'"
+            printf "%s\n" "DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'"
+            printf "%s\n" "DISTRIB_TAINTS=''"
+          } > package/base-files/files/etc/openwrt_release
 
-          cat > package/base-files/files/etc/openwrt_version <<'EOF'
-          阿宇定制固件 兆能M2专用版
-          EOF
+          printf "%s\n" "阿宇定制固件 兆能M2专用版" > package/base-files/files/etc/openwrt_version
 
-          cat > package/base-files/files/etc/uci-defaults/99-custom-version <<'EOF'
-          #!/bin/sh
-
-          cat > /etc/openwrt_release <<'EOR'
-          DISTRIB_ID='阿宇定制固件'
-          DISTRIB_RELEASE='兆能M2专用版'
-          DISTRIB_REVISION='ZNM2'
-          DISTRIB_TARGET='qualcommax/ipq60xx'
-          DISTRIB_ARCH='aarch64_cortex-a53'
-          DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
-          DISTRIB_TAINTS=''
-          EOR
-
-          echo '阿宇定制固件 兆能M2专用版' > /etc/openwrt_version
-
-          if [ -f /usr/lib/lua/luci/version.lua ]; then
-              sed -i "s|^luciname *=.*|luciname = '阿宇定制面板'|g" /usr/lib/lua/luci/version.lua
-              sed -i "s|^luciversion *=.*|luciversion = '兆能M2专用版'|g" /usr/lib/lua/luci/version.lua
-          fi
-
-          exit 0
-          EOF
+          {
+            printf "%s\n" "#!/bin/sh"
+            printf "%s\n" ""
+            printf "%s\n" "mkdir -p /etc"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_ID='阿宇定制固件'\" > /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_RELEASE='兆能M2专用版'\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_REVISION='ZNM2'\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_TARGET='qualcommax/ipq60xx'\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_ARCH='aarch64_cortex-a53'\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_TAINTS=''\" >> /etc/openwrt_release"
+            printf "%s\n" "printf \"%s\\n\" \"阿宇定制固件 兆能M2专用版\" > /etc/openwrt_version"
+            printf "%s\n" ""
+            printf "%s\n" "if [ -f /usr/lib/lua/luci/version.lua ]; then"
+            printf "%s\n" "  sed -i \"s|^luciname *=.*|luciname = '阿宇定制面板'|g\" /usr/lib/lua/luci/version.lua"
+            printf "%s\n" "  sed -i \"s|^luciversion *=.*|luciversion = '兆能M2专用版'|g\" /usr/lib/lua/luci/version.lua"
+            printf "%s\n" "fi"
+            printf "%s\n" ""
+            printf "%s\n" "exit 0"
+          } > package/base-files/files/etc/uci-defaults/99-custom-version
 
           chmod +x package/base-files/files/etc/uci-defaults/99-custom-version
 
           echo "==== Remove DaeWRT build mark if exists ===="
-          grep -R "DaeWRT" -n package/base-files/files files package 2>/dev/null || true
-          find package/base-files/files files package -type f 2>/dev/null | xargs -r sed -i \
-            -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" \
-            -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
+          for dir in package/base-files/files files package; do
+            if [ -d "$dir" ]; then
+              grep -R "DaeWRT" -n "$dir" 2>/dev/null || true
+              find "$dir" -type f -print0 2>/dev/null | xargs -0 -r sed -i -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
+            fi
+          done
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
 
@@ -243,6 +242,7 @@ jobs:
           make download -j$(nproc)
 
       - name: Update Dae core
+        if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
           wget -O dae.zip https://github.com/daeuniverse/dae/releases/download/v1.1.0/dae-linux-arm64.zip
@@ -266,8 +266,8 @@ jobs:
           done
 
           echo "========cache status========"
-          echo "ccache: $(du -sh ./wrt/.ccache | cut -f 1)"
-          echo "staging: $(du -sh ./wrt/staging_dir | cut -f 1)"
+          echo "ccache: $(du -sh ./wrt/.ccache 2>/dev/null | cut -f 1 || echo 0)"
+          echo "staging: $(du -sh ./wrt/staging_dir 2>/dev/null | cut -f 1 || echo 0)"
 
       - name: Machine Information
         run: |
@@ -283,7 +283,7 @@ jobs:
 
       - name: Package Firmware
         run: |
-          cd ./wrt/ && mkdir ./upload/
+          cd ./wrt/ && mkdir -p ./upload/
 
           cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_VER"-"$WRT_DATE".txt
 
