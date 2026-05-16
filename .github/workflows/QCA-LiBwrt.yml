@@ -50,7 +50,7 @@ jobs:
       #默认主题
       WRT_THEME: aurora
       #默认主机名
-      WRT_NAME: NERCH_Plus
+      WRT_NAME: ZNM2
       #默认WIFI名称
       WRT_SSID: NERCH_Plus
       #默认WIFI密码
