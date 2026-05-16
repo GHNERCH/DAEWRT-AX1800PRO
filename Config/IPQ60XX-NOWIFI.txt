@@ -1,34 +1,153 @@
-#CMIOT GLINET LINKSYS QIHOO REDMI XIAOMI ZN JDCLOUD
+# ZN M2 / qualcommax ipq60xx / no wifi / no usb
+
 CONFIG_TARGET_qualcommax=y
 CONFIG_TARGET_qualcommax_ipq60xx=y
-CONFIG_TARGET_MULTI_PROFILE=y
+CONFIG_TARGET_MULTI_PROFILE=n
 CONFIG_TARGET_PER_DEVICE_ROOTFS=y
-#设备列表
-CONFIG_TARGET_DEVICE_qualcommax_ipq60xx_DEVICE_jdcloud_re-ss-01=y
 
-#内核配置
-CONFIG_KERNEL_ARM_PMU=y
-CONFIG_KERNEL_CFQ_GROUP_IOSCHED=y
-CONFIG_KERNEL_CGROUP_DEVICE=y
-CONFIG_KERNEL_CGROUP_FREEZER=y
-CONFIG_KERNEL_CGROUP_HUGETLB=y
-CONFIG_KERNEL_CGROUP_NET_PRIO=y
-CONFIG_KERNEL_CGROUP_PERF=y
-CONFIG_KERNEL_HUGETLBFS=y
-CONFIG_KERNEL_HUGETLB_PAGE=y
-CONFIG_KERNEL_MEMCG_SWAP_ENABLED=y
-CONFIG_KERNEL_NET_CLS_CGROUP=y
-CONFIG_KERNEL_PERF_EVENTS=y
-# CONFIG_KERNEL_PREEMPT_RCU is not set
+# 兆能 M2
+CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_zn_m2=y
 
-#NSS配置
-CONFIG_FEED_nss_packages=n
-CONFIG_FEED_sqm_scripts_nss=n
+# 内存配置：兆能 M2 512MB
 CONFIG_IPQ_MEM_PROFILE_1024=n
 CONFIG_IPQ_MEM_PROFILE_512=y
 CONFIG_ATH11K_MEM_PROFILE_1G=n
-CONFIG_ATH11K_MEM_PROFILE_512M=y
+CONFIG_ATH11K_MEM_PROFILE_512M=n
 
+# NSS 保留，主路由硬件加速相关
+CONFIG_PACKAGE_kmod-qca-nss-crypto=y
+CONFIG_PACKAGE_kmod-qca-nss-dp=y
+CONFIG_PACKAGE_kmod-qca-nss-drv=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-bridge-mgr=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-gre=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-igs=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-l2tpv2=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-map-t=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-match=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-mirror=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-netlink=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-pppoe=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-pptp=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-profile=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-qdisc=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-tun6rd=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-vlan-mgr=y
+CONFIG_PACKAGE_kmod-qca-nss-drv-wifi-meshmgr=n
+CONFIG_PACKAGE_kmod-qca-nss-ecm=y
+CONFIG_PACKAGE_kmod-nss-ifb=y
+
+# SQM-NSS 可保留，用不到可改 n
+CONFIG_PACKAGE_luci-app-sqm=y
 CONFIG_PACKAGE_sqm-scripts-nss=y
 
-CONFIG_PACKAGE_kmod-qca-nss-crypto=y
+# 主路由必要网络组件
+CONFIG_PACKAGE_dnsmasq-full=y
+CONFIG_PACKAGE_firewall4=y
+CONFIG_PACKAGE_nftables=y
+CONFIG_PACKAGE_kmod-nft-core=y
+CONFIG_PACKAGE_kmod-nft-nat=y
+CONFIG_PACKAGE_kmod-nft-tproxy=y
+CONFIG_PACKAGE_kmod-nft-socket=y
+CONFIG_PACKAGE_kmod-nft-offload=y
+CONFIG_PACKAGE_kmod-tun=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_iptables-nft=y
+CONFIG_PACKAGE_kmod-ipt-nat=y
+CONFIG_PACKAGE_kmod-ipt-core=y
+
+# SSH 远程保留：OpenWrt 默认 SSH 是 dropbear
+CONFIG_PACKAGE_dropbear=y
+CONFIG_PACKAGE_openssh-sftp-server=y
+
+# ZRAM / ZSWAP
+CONFIG_PACKAGE_kmod-zram=y
+CONFIG_PACKAGE_zram-swap=y
+CONFIG_KERNEL_ZSWAP=y
+CONFIG_KERNEL_ZSWAP_DEFAULT_ON=y
+CONFIG_KERNEL_ZSWAP_COMPRESSOR_DEFAULT_LZO=y
+CONFIG_KERNEL_ZSWAP_ZPOOL_DEFAULT_ZSMALLOC=y
+CONFIG_KERNEL_MEMCG_SWAP_ENABLED=y
+
+# 文件系统基础，保留 eMMC / overlay 相关
+CONFIG_PACKAGE_block-mount=y
+CONFIG_PACKAGE_e2fsprogs=y
+CONFIG_PACKAGE_f2fsck=y
+CONFIG_PACKAGE_mkf2fs=y
+CONFIG_PACKAGE_kmod-fs-ext4=y
+CONFIG_PACKAGE_kmod-fs-f2fs=y
+CONFIG_PACKAGE_kmod-fs-btrfs=n
+CONFIG_PACKAGE_kmod-fuse=n
+CONFIG_PACKAGE_mmc-utils=y
+CONFIG_PACKAGE_nand-utils=y
+
+# 去掉 WiFi 固件、驱动、管理组件
+CONFIG_PACKAGE_ipq-wifi-zn_m2=n
+CONFIG_PACKAGE_ath11k-firmware-ipq6018=n
+CONFIG_PACKAGE_kmod-ath=n
+CONFIG_PACKAGE_kmod-ath11k=n
+CONFIG_PACKAGE_kmod-ath11k-ahb=n
+CONFIG_PACKAGE_kmod-ath11k-pci=n
+CONFIG_PACKAGE_kmod-mac80211=n
+CONFIG_PACKAGE_kmod-cfg80211=n
+CONFIG_PACKAGE_wireless-regdb=n
+CONFIG_PACKAGE_wifi-scripts=n
+CONFIG_PACKAGE_iw=n
+CONFIG_PACKAGE_iwinfo=n
+CONFIG_PACKAGE_libiwinfo=n
+CONFIG_PACKAGE_libiwinfo-lua=n
+CONFIG_PACKAGE_luci-lib-ipkg=y
+CONFIG_PACKAGE_luci-proto-wireguard=n
+CONFIG_PACKAGE_hostapd-common=n
+CONFIG_PACKAGE_wpad=n
+CONFIG_PACKAGE_wpad-basic-mbedtls=n
+CONFIG_PACKAGE_wpad-basic-openssl=n
+CONFIG_PACKAGE_wpad-mbedtls=n
+CONFIG_PACKAGE_wpad-openssl=n
+CONFIG_PACKAGE_wpad-wolfssl=n
+CONFIG_PACKAGE_hostapd=n
+CONFIG_PACKAGE_hostapd-openssl=n
+CONFIG_PACKAGE_hostapd-common=n
+CONFIG_PACKAGE_luci-app-wireless=n
+
+# 去掉 USB 全家桶
+CONFIG_PACKAGE_kmod-usb-core=n
+CONFIG_PACKAGE_kmod-usb3=n
+CONFIG_PACKAGE_kmod-usb-dwc3=n
+CONFIG_PACKAGE_kmod-usb-dwc3-qcom=n
+CONFIG_PACKAGE_kmod-usb-ohci=n
+CONFIG_PACKAGE_kmod-usb-uhci=n
+CONFIG_PACKAGE_kmod-usb-xhci-hcd=n
+CONFIG_PACKAGE_kmod-usb-xhci-pci=n
+CONFIG_PACKAGE_kmod-usb-storage=n
+CONFIG_PACKAGE_kmod-usb-storage-extras=n
+CONFIG_PACKAGE_kmod-usb-storage-uas=n
+CONFIG_PACKAGE_kmod-usb-net=n
+CONFIG_PACKAGE_kmod-usb-net-cdc-ether=n
+CONFIG_PACKAGE_kmod-usb-net-cdc-eem=n
+CONFIG_PACKAGE_kmod-usb-net-cdc-mbim=n
+CONFIG_PACKAGE_kmod-usb-net-cdc-ncm=n
+CONFIG_PACKAGE_kmod-usb-net-cdc-subset=n
+CONFIG_PACKAGE_kmod-usb-net-huawei-cdc-ncm=n
+CONFIG_PACKAGE_kmod-usb-net-ipheth=n
+CONFIG_PACKAGE_kmod-usb-net-qmi-wwan=n
+CONFIG_PACKAGE_kmod-usb-net-rndis=n
+CONFIG_PACKAGE_kmod-usb-net-rtl8150=n
+CONFIG_PACKAGE_kmod-usb-net-rtl8152=n
+CONFIG_PACKAGE_kmod-usb-serial=n
+CONFIG_PACKAGE_kmod-usb-serial-option=n
+CONFIG_PACKAGE_kmod-usb-serial-wwan=n
+CONFIG_PACKAGE_kmod-usb-acm=n
+CONFIG_PACKAGE_kmod-usb-printer=n
+CONFIG_PACKAGE_usbutils=n
+CONFIG_PACKAGE_usbmuxd=n
+CONFIG_PACKAGE_usb-modeswitch=n
+CONFIG_PACKAGE_automount=n
+
+# 内核基础功能
+CONFIG_KERNEL_ARM_PMU=y
+CONFIG_KERNEL_CGROUP_DEVICE=y
+CONFIG_KERNEL_CGROUP_FREEZER=y
+CONFIG_KERNEL_CGROUP_NET_PRIO=y
+CONFIG_KERNEL_CGROUP_PERF=y
+CONFIG_KERNEL_NET_CLS_CGROUP=y
+CONFIG_KERNEL_PERF_EVENTS=y
