@@ -114,13 +114,12 @@ jobs:
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
           echo "WRT_KVER=none" >> $GITHUB_ENV
           echo "WRT_LIST=none" >> $GITHUB_ENV
-          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
 
+          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
           [[ -z $WRT_ARCH ]] && {
             export WRT_ARCH=$(sed -n 's/.*_DEVICE_\(.*\)_DEVICE_.*/\1/p' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -n 1)
             echo "WRT_ARCH=$WRT_ARCH" >> $GITHUB_ENV
           }
-
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
 
       - name: Clone Code
@@ -189,42 +188,42 @@ jobs:
           mkdir -p package/base-files/files/etc
           mkdir -p package/base-files/files/etc/uci-defaults
 
-          cat > package/base-files/files/etc/openwrt_release <<EOF
-DISTRIB_ID='阿宇定制固件'
-DISTRIB_RELEASE='兆能M2专用版'
-DISTRIB_REVISION='ZNM2'
-DISTRIB_TARGET='qualcommax/ipq60xx'
-DISTRIB_ARCH='aarch64_cortex-a53'
-DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
-DISTRIB_TAINTS=''
-EOF
+          cat > package/base-files/files/etc/openwrt_release <<'EOF'
+          DISTRIB_ID='阿宇定制固件'
+          DISTRIB_RELEASE='兆能M2专用版'
+          DISTRIB_REVISION='ZNM2'
+          DISTRIB_TARGET='qualcommax/ipq60xx'
+          DISTRIB_ARCH='aarch64_cortex-a53'
+          DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
+          DISTRIB_TAINTS=''
+          EOF
 
-          cat > package/base-files/files/etc/openwrt_version <<EOF
-阿宇定制固件 兆能M2专用版
-EOF
+          cat > package/base-files/files/etc/openwrt_version <<'EOF'
+          阿宇定制固件 兆能M2专用版
+          EOF
 
           cat > package/base-files/files/etc/uci-defaults/99-custom-version <<'EOF'
-#!/bin/sh
+          #!/bin/sh
 
-cat > /etc/openwrt_release <<'EOR'
-DISTRIB_ID='阿宇定制固件'
-DISTRIB_RELEASE='兆能M2专用版'
-DISTRIB_REVISION='ZNM2'
-DISTRIB_TARGET='qualcommax/ipq60xx'
-DISTRIB_ARCH='aarch64_cortex-a53'
-DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
-DISTRIB_TAINTS=''
-EOR
+          cat > /etc/openwrt_release <<'EOR'
+          DISTRIB_ID='阿宇定制固件'
+          DISTRIB_RELEASE='兆能M2专用版'
+          DISTRIB_REVISION='ZNM2'
+          DISTRIB_TARGET='qualcommax/ipq60xx'
+          DISTRIB_ARCH='aarch64_cortex-a53'
+          DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'
+          DISTRIB_TAINTS=''
+          EOR
 
-echo '阿宇定制固件 兆能M2专用版' > /etc/openwrt_version
+          echo '阿宇定制固件 兆能M2专用版' > /etc/openwrt_version
 
-if [ -f /usr/lib/lua/luci/version.lua ]; then
-    sed -i "s|^luciname *=.*|luciname = '阿宇定制面板'|g" /usr/lib/lua/luci/version.lua
-    sed -i "s|^luciversion *=.*|luciversion = '兆能M2专用版'|g" /usr/lib/lua/luci/version.lua
-fi
+          if [ -f /usr/lib/lua/luci/version.lua ]; then
+              sed -i "s|^luciname *=.*|luciname = '阿宇定制面板'|g" /usr/lib/lua/luci/version.lua
+              sed -i "s|^luciversion *=.*|luciversion = '兆能M2专用版'|g" /usr/lib/lua/luci/version.lua
+          fi
 
-exit 0
-EOF
+          exit 0
+          EOF
 
           chmod +x package/base-files/files/etc/uci-defaults/99-custom-version
 
@@ -325,6 +324,9 @@ EOF
 
             登录地址：${{env.WRT_IP}}
             登录密码：${{env.WRT_PW}}
+
+            WIFI名称：${{env.WRT_SSID}}
+            WIFI密码：${{env.WRT_WORD}}
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
