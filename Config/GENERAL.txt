@@ -52,7 +52,7 @@ CONFIG_PACKAGE_kmod-tun=y
 
 #=================================================
 # DAED 面板 + DAE 核心
-# 重要：主要用 daed 面板时，这三个都要保留
+# 重要：
 # luci-app-daed = LuCI 面板
 # daed          = daed 后端服务
 # dae           = 代理核心
@@ -60,8 +60,6 @@ CONFIG_PACKAGE_kmod-tun=y
 CONFIG_PACKAGE_luci-app-daed=y
 CONFIG_PACKAGE_daed=y
 CONFIG_PACKAGE_dae=y
-
-# 不使用旧版 dae 面板
 CONFIG_PACKAGE_luci-app-dae=n
 
 #=================================================
@@ -93,15 +91,15 @@ CONFIG_PACKAGE_microsocks=y
 #=================================================
 # 实用小插件
 #=================================================
+CONFIG_PACKAGE_luci-app-commands=y
 CONFIG_PACKAGE_luci-app-ttyd=y
-CONFIG_PACKAGE_luci-app-commands=n
-CONFIG_PACKAGE_luci-app-autoreboot=n
-CONFIG_PACKAGE_luci-app-wol=n
-CONFIG_PACKAGE_luci-app-nlbwmon=n
-CONFIG_PACKAGE_nlbwmon=n
-CONFIG_PACKAGE_luci-app-upnp=n
-CONFIG_PACKAGE_miniupnpd=n
-CONFIG_PACKAGE_luci-app-arpbind=n
+CONFIG_PACKAGE_luci-app-autoreboot=y
+CONFIG_PACKAGE_luci-app-wol=y
+CONFIG_PACKAGE_luci-app-nlbwmon=y
+CONFIG_PACKAGE_nlbwmon=y
+CONFIG_PACKAGE_luci-app-upnp=y
+CONFIG_PACKAGE_miniupnpd=y
+CONFIG_PACKAGE_luci-app-arpbind=y
 
 #=================================================
 # ZRAM / ZSWAP
@@ -141,9 +139,14 @@ CONFIG_PACKAGE_kmod-nft-nat=y
 CONFIG_PACKAGE_kmod-nft-tproxy=y
 CONFIG_PACKAGE_kmod-nft-socket=y
 CONFIG_PACKAGE_kmod-nft-offload=y
-CONFIG_PACKAGE_kmod-nft-fullcone=y
 CONFIG_PACKAGE_kmod-inet-diag=y
 CONFIG_PACKAGE_kmod-netlink-diag=y
+
+#=================================================
+# 不默认开启 SQM
+#=================================================
+CONFIG_PACKAGE_luci-app-sqm=n
+CONFIG_PACKAGE_sqm-scripts-nss=n
 
 #=================================================
 # 去掉 USB
@@ -184,7 +187,7 @@ CONFIG_PACKAGE_automount=n
 
 #=================================================
 # 去掉 WiFi 用户层
-# 注意：底层 WiFi 驱动最好在 IPQ60XX-WIFI.txt 里禁用
+# 底层 WiFi 驱动建议继续在 IPQ60XX-WIFI.txt 里禁用
 #=================================================
 CONFIG_PACKAGE_wifi-scripts=n
 CONFIG_PACKAGE_iw=n
@@ -202,7 +205,7 @@ CONFIG_PACKAGE_hostapd-common=n
 CONFIG_PACKAGE_luci-app-wireless=n
 
 #=================================================
-# 去掉大体积/不需要插件
+# 去掉大体积 / 不需要插件
 #=================================================
 CONFIG_PACKAGE_luci-app-samba4=n
 CONFIG_PACKAGE_samba4-server=n
