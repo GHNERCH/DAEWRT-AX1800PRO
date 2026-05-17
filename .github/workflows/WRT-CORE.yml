@@ -68,6 +68,7 @@ jobs:
   core:
     name: ${{inputs.WRT_SOURCE}}
     runs-on: ubuntu-24.04
+
     steps:
       - name: Install BC
         env:
@@ -108,7 +109,7 @@ jobs:
 
       - name: Initialization Values
         run: |
-          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "WRT_DATE=$(TZ=Asia/Shanghai date '+%y.%m.%d-%H.%M.%S')" >> $GITHUB_ENV
           echo "WRT_MARK=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)" >> $GITHUB_ENV
           echo "WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 4)-$WRT_BRANCH" >> $GITHUB_ENV
           echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
@@ -116,10 +117,17 @@ jobs:
           echo "WRT_LIST=none" >> $GITHUB_ENV
           echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
 
-          [[ -z $WRT_ARCH ]] && {
-            export WRT_ARCH=$(sed -n 's/.*_DEVICE_\(.*\)_DEVICE_.*/\1/p' $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt | head -n 1)
+          if [ -z "$WRT_ARCH" ]; then
+            WRT_ARCH_FROM_CONFIG="$(grep -m 1 -oP '^CONFIG_TARGET_.+_DEVICE_\K.+(?=\=y)' "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" || true)"
+
+            if [ -z "$WRT_ARCH_FROM_CONFIG" ]; then
+              WRT_ARCH_FROM_CONFIG="$WRT_CONFIG"
+            fi
+
+            echo "WRT_ARCH=$WRT_ARCH_FROM_CONFIG" >> $GITHUB_ENV
+          else
             echo "WRT_ARCH=$WRT_ARCH" >> $GITHUB_ENV
-          }
+          fi
 
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
 
@@ -127,7 +135,8 @@ jobs:
         run: |
           git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
-          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          cd ./wrt/
+          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
       - name: Update Dae/Daed rules
         run: |
@@ -157,7 +166,7 @@ jobs:
         run: |
           if [ -d "./wrt/staging_dir" ]; then
             find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r dir; do
-                find "$dir" -type f -exec touch {} +
+              find "$dir" -type f -exec touch {} +
             done
           fi
 
@@ -225,6 +234,7 @@ jobs:
           chmod +x package/base-files/files/etc/uci-defaults/99-custom-version
 
           echo "==== Remove DaeWRT build mark if exists ===="
+
           for dir in package/base-files/files files package; do
             if [ -d "$dir" ]; then
               grep -R "DaeWRT" -n "$dir" 2>/dev/null || true
@@ -261,8 +271,21 @@ jobs:
 
       - name: Delete Old Cache
         run: |
-          gh cache list --key ${{ env.WRT_ARCH }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
-            gh cache delete "$key"
+          echo "==== Delete old cache ===="
+
+          CACHE_PREFIX="${WRT_ARCH}-${{ hashFiles('**/repo_flag') }}-"
+
+          if [ -z "$WRT_ARCH" ]; then
+            CACHE_PREFIX="${WRT_CONFIG}-${{ hashFiles('**/repo_flag') }}-"
+          fi
+
+          echo "Cache prefix: $CACHE_PREFIX"
+
+          gh cache list --key "$CACHE_PREFIX" --json key --jq '.[] | .key' | while read -r key; do
+            if [ -n "$key" ]; then
+              echo "Deleting cache: $key"
+              gh cache delete -- "$key" || true
+            fi
           done
 
           echo "========cache status========"
@@ -283,7 +306,8 @@ jobs:
 
       - name: Package Firmware
         run: |
-          cd ./wrt/ && mkdir -p ./upload/
+          cd ./wrt/
+          mkdir -p ./upload/
 
           cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_VER"-"$WRT_DATE".txt
 
