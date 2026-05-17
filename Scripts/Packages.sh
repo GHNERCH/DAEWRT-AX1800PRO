@@ -2,7 +2,11 @@
 set -e
 
 #=================================================
-# 安装和更新软件包
+# Packages.sh - ZN M2 精简插件源
+# 修复：
+# 1. 防止 luci-app-dae 误删 luci-app-daed
+# 2. 改用可访问的 laipeng668/luci-app-gecoosac
+# 3. 保留 DAED 面板 + DAE 核心
 #=================================================
 
 UPDATE_PACKAGE() {
@@ -16,95 +20,84 @@ UPDATE_PACKAGE() {
     echo ""
     echo "==== Update package: ${PKG_NAME} from ${PKG_REPO} branch ${PKG_BRANCH} ===="
 
-    local PKG_LIST=("${PKG_NAME}")
-    if [ -n "$PKG_EXTRA_NAMES" ]; then
-        for EXTRA_NAME in $PKG_EXTRA_NAMES; do
-            PKG_LIST+=("$EXTRA_NAME")
-        done
-    fi
-
-    for NAME in "${PKG_LIST[@]}"; do
-        echo "Search directory: $NAME"
-
-        FOUND_DIRS="$(find ../feeds/luci/ ../feeds/packages/ ./ -maxdepth 4 -type d -iname "*${NAME}*" 2>/dev/null || true)"
-
-        if [ -n "$FOUND_DIRS" ]; then
-            while read -r DIR; do
-                if [ -n "$DIR" ]; then
-                    rm -rf "$DIR"
-                    echo "Delete directory: $DIR"
-                fi
-            done <<< "$FOUND_DIRS"
-        else
-            echo "Not found directory: $NAME"
-        fi
-    done
-
-    rm -rf "$REPO_NAME" "$PKG_NAME"
-
-    git clone --depth=1 --single-branch --branch "$PKG_BRANCH" "https://github.com/${PKG_REPO}.git"
+    rm -rf "/tmp/${REPO_NAME}" "/tmp/${PKG_NAME}"
+    git clone --depth=1 --single-branch --branch "$PKG_BRANCH" "https://github.com/${PKG_REPO}.git" "/tmp/${REPO_NAME}"
 
     if [ "$PKG_SPECIAL" = "pkg" ]; then
-        find "./${REPO_NAME}" -maxdepth 4 -type d -iname "*${PKG_NAME}*" -prune -exec cp -rf {} ./ \;
-        rm -rf "./${REPO_NAME}"
+        find "/tmp/${REPO_NAME}" -maxdepth 4 -type d -name "$PKG_NAME" -prune -exec cp -rf {} ./ \;
+        rm -rf "/tmp/${REPO_NAME}"
     elif [ "$PKG_SPECIAL" = "name" ]; then
-        mv -f "$REPO_NAME" "$PKG_NAME"
+        rm -rf "./${PKG_NAME}"
+        mv -f "/tmp/${REPO_NAME}" "./${PKG_NAME}"
+    else
+        rm -rf "./${REPO_NAME}"
+        cp -rf "/tmp/${REPO_NAME}" "./${REPO_NAME}"
+        rm -rf "/tmp/${REPO_NAME}"
+    fi
+
+    if [ -n "$PKG_EXTRA_NAMES" ]; then
+        echo "Extra names: $PKG_EXTRA_NAMES"
     fi
 }
 
-#=================================================
-# 主题：Aurora
-#=================================================
-UPDATE_PACKAGE "aurora" "eamonxg/luci-theme-aurora" "master"
-UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
+echo ""
+echo "==== Current package dir ===="
+pwd
 
 #=================================================
-# DAED / DAE
-# 重要：
-# daed 面板需要 luci-app-daed + daed + dae
-# main 分支可能不稳定，这里用 kix 分支更适合当前 DaeWRT 系列
-#=================================================
-UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix"
-UPDATE_PACKAGE "luci-app-dae" "QiuSimons/luci-app-dae" "kix"
-
-#=================================================
-# Lucky
-#=================================================
-UPDATE_PACKAGE "lucky" "gdy666/luci-app-lucky" "main"
-
-#=================================================
-# GecoOS AC
-#=================================================
-UPDATE_PACKAGE "gecoosac" "lwb1978/openwrt-gecoosac" "main"
-
-#=================================================
-# 可选小插件包源
-# 只用于补充 wol/timewol 等，不强制启用
-#=================================================
-UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "luci-app-timewol luci-app-wolplus"
-
-#=================================================
-# 清理不需要的大插件/冲突包
+# 先清理 feeds 里可能冲突的旧包
+# 注意：只清理 feeds，不清理 ./ 当前 package 目录里的新包
 #=================================================
 echo ""
-echo "==== Remove duplicate/conflict packages ===="
+echo "==== Remove old/conflict packages from feeds only ===="
+
+rm -rf ../feeds/luci/applications/luci-app-daed
+rm -rf ../feeds/luci/applications/luci-app-dae
+rm -rf ../feeds/packages/net/daed
+rm -rf ../feeds/packages/net/dae
+
+rm -rf ../feeds/luci/applications/luci-app-mosdns
+rm -rf ../feeds/packages/net/mosdns
+rm -rf ../feeds/packages/utils/v2dat
 
 rm -rf ../feeds/luci/applications/luci-app-passwall*
-rm -rf ../feeds/luci/applications/luci-app-mosdns
-rm -rf ../feeds/luci/applications/luci-app-dockerman
 rm -rf ../feeds/luci/applications/luci-app-bypass*
 rm -rf ../feeds/luci/applications/luci-app-openclash
 rm -rf ../feeds/luci/applications/luci-app-homeproxy
 rm -rf ../feeds/luci/applications/luci-app-nikki
 rm -rf ../feeds/luci/applications/luci-app-momo
+rm -rf ../feeds/luci/applications/luci-app-dockerman
 
-# 注意：
-# 不要删除 ./luci-app-daed 仓库里的 daed / dae
-# 只删除 feeds 里的旧 dae / daed，避免和 QiuSimons/luci-app-daed 冲突
-rm -rf ../feeds/luci/applications/luci-app-dae
-rm -rf ../feeds/luci/applications/luci-app-daed
-rm -rf ../feeds/packages/net/dae
-rm -rf ../feeds/packages/net/daed
+#=================================================
+# 主题：Aurora
+#=================================================
+UPDATE_PACKAGE "luci-theme-aurora" "eamonxg/luci-theme-aurora" "master" "name"
+UPDATE_PACKAGE "luci-app-aurora-config" "eamonxg/luci-app-aurora-config" "master" "name"
+
+#=================================================
+# DAED / DAE
+# 重点：
+# 只克隆 luci-app-daed，不再单独克隆 luci-app-dae
+# 因为 luci-app-dae 会模糊匹配误删 luci-app-daed
+# luci-app-daed 仓库内通常包含 daed / dae 相关包
+#=================================================
+UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix" "name"
+
+#=================================================
+# Lucky
+#=================================================
+UPDATE_PACKAGE "luci-app-lucky" "gdy666/luci-app-lucky" "main" "name"
+
+#=================================================
+# GecoOS AC
+# 使用可访问仓库：laipeng668/luci-app-gecoosac
+#=================================================
+UPDATE_PACKAGE "luci-app-gecoosac" "laipeng668/luci-app-gecoosac" "main" "name"
+
+#=================================================
+# 可选补充插件包
+#=================================================
+UPDATE_PACKAGE "viking-packages" "VIKINGYFY/packages" "main" "name"
 
 #=================================================
 # 修复 coremark Makefile
@@ -114,12 +107,28 @@ if [ -f "../feeds/packages/utils/coremark/Makefile" ]; then
 fi
 
 #=================================================
-# 检查 DAED 包是否存在
+# 显示 DAED / GecoOSAC / Lucky 是否存在
 #=================================================
 echo ""
-echo "==== Check DAED packages ===="
-find ./ -maxdepth 5 -type d \( -name "luci-app-daed" -o -name "daed" -o -name "dae" \) -print || true
-find ../feeds/packages ../feeds/luci -maxdepth 5 -type d \( -name "luci-app-daed" -o -name "daed" -o -name "dae" \) -print 2>/dev/null || true
+echo "==== Check packages in package dir ===="
+find ./ -maxdepth 5 -type d \( \
+    -name "luci-app-daed" -o \
+    -name "daed" -o \
+    -name "dae" -o \
+    -name "luci-app-lucky" -o \
+    -name "lucky" -o \
+    -name "luci-app-gecoosac" -o \
+    -name "gecoosac" \
+\) -print || true
+
+echo ""
+echo "==== Check package Makefiles ===="
+find ./ -maxdepth 5 -type f -path "*/Makefile" | while read -r mf; do
+    if grep -qE "Package/(luci-app-daed|daed|dae|luci-app-lucky|lucky|luci-app-gecoosac|gecoosac)" "$mf"; then
+        echo "$mf"
+        grep -E "Package/(luci-app-daed|daed|dae|luci-app-lucky|lucky|luci-app-gecoosac|gecoosac)" "$mf" || true
+    fi
+done
 
 echo ""
 echo "==== Packages.sh done ===="
