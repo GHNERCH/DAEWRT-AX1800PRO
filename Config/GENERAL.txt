@@ -66,15 +66,15 @@ CONFIG_PACKAGE_luci-app-microsocks=y
 CONFIG_PACKAGE_microsocks=y
 
 # 实用小插件
-CONFIG_PACKAGE_luci-app-commands=y
-CONFIG_PACKAGE_luci-app-ttyd=y
-CONFIG_PACKAGE_luci-app-autoreboot=y
-CONFIG_PACKAGE_luci-app-wol=y
-CONFIG_PACKAGE_luci-app-nlbwmon=y
-CONFIG_PACKAGE_nlbwmon=y
-CONFIG_PACKAGE_luci-app-upnp=y
-CONFIG_PACKAGE_miniupnpd=y
-CONFIG_PACKAGE_luci-app-arpbind=y
+CONFIG_PACKAGE_luci-app-commands=n
+CONFIG_PACKAGE_luci-app-ttyd=n
+CONFIG_PACKAGE_luci-app-autoreboot=n
+CONFIG_PACKAGE_luci-app-wol=n
+CONFIG_PACKAGE_luci-app-nlbwmon=n
+CONFIG_PACKAGE_nlbwmon=n
+CONFIG_PACKAGE_luci-app-upnp=n
+CONFIG_PACKAGE_miniupnpd=n
+CONFIG_PACKAGE_luci-app-arpbind=n
 
 # ZRAM / ZSWAP
 CONFIG_PACKAGE_kmod-zram=y
