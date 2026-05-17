@@ -4,18 +4,13 @@
 # 去掉：mosdns / v2dat / usb / wifi / 大体积插件
 #=================================================
 
-#=================================================
-# 编译基础
-#=================================================
 CONFIG_CCACHE=y
 CONFIG_DEVEL=y
 CONFIG_TARGET_MULTI_PROFILE=n
 CONFIG_TARGET_PER_DEVICE_ROOTFS=y
 CONFIG_TARGET_ROOTFS_INITRAMFS=n
 
-#=================================================
 # LuCI 基础 + 中文
-#=================================================
 CONFIG_PACKAGE_luci=y
 CONFIG_PACKAGE_luci-base=y
 CONFIG_PACKAGE_luci-compat=y
@@ -27,18 +22,14 @@ CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
 CONFIG_PACKAGE_default-settings=y
 CONFIG_PACKAGE_default-settings-chn=y
 
-#=================================================
 # 默认主题 Aurora
-#=================================================
 CONFIG_PACKAGE_luci-theme-aurora=y
 CONFIG_PACKAGE_luci-app-aurora-config=y
 CONFIG_PACKAGE_luci-theme-bootstrap=n
 CONFIG_PACKAGE_luci-theme-argon=n
 CONFIG_PACKAGE_luci-app-argon-config=n
 
-#=================================================
 # SSH / 基础工具
-#=================================================
 CONFIG_PACKAGE_dropbear=y
 CONFIG_PACKAGE_openssh-sftp-server=y
 CONFIG_PACKAGE_bash=y
@@ -50,47 +41,31 @@ CONFIG_PACKAGE_dnsmasq-full=y
 CONFIG_PACKAGE_firewall4=y
 CONFIG_PACKAGE_kmod-tun=y
 
-#=================================================
 # DAED 面板 + DAE 核心
-# 重要：
-# luci-app-daed = LuCI 面板
-# daed          = daed 后端服务
-# dae           = 代理核心
-#=================================================
 CONFIG_PACKAGE_luci-app-daed=y
 CONFIG_PACKAGE_daed=y
 CONFIG_PACKAGE_dae=y
 CONFIG_PACKAGE_luci-app-dae=n
 
-#=================================================
 # 去掉 MosDNS / v2dat
-#=================================================
 CONFIG_PACKAGE_luci-app-mosdns=n
 CONFIG_PACKAGE_mosdns=n
 CONFIG_PACKAGE_v2dat=n
 CONFIG_PACKAGE_v2ray-geodata-updater=n
 
-#=================================================
 # Lucky
-#=================================================
 CONFIG_PACKAGE_luci-app-lucky=y
 CONFIG_PACKAGE_lucky=y
 
-#=================================================
 # GecoOS AC
-#=================================================
 CONFIG_PACKAGE_luci-app-gecoosac=y
 CONFIG_PACKAGE_gecoosac=y
 
-#=================================================
 # microsocks
-#=================================================
 CONFIG_PACKAGE_luci-app-microsocks=y
 CONFIG_PACKAGE_microsocks=y
 
-#=================================================
 # 实用小插件
-#=================================================
 CONFIG_PACKAGE_luci-app-commands=y
 CONFIG_PACKAGE_luci-app-ttyd=y
 CONFIG_PACKAGE_luci-app-autoreboot=y
@@ -101,9 +76,7 @@ CONFIG_PACKAGE_luci-app-upnp=y
 CONFIG_PACKAGE_miniupnpd=y
 CONFIG_PACKAGE_luci-app-arpbind=y
 
-#=================================================
 # ZRAM / ZSWAP
-#=================================================
 CONFIG_PACKAGE_kmod-zram=y
 CONFIG_PACKAGE_zram-swap=y
 CONFIG_KERNEL_ZSWAP=y
@@ -112,16 +85,12 @@ CONFIG_KERNEL_ZSWAP_COMPRESSOR_DEFAULT_LZO=y
 CONFIG_KERNEL_ZSWAP_ZPOOL_DEFAULT_ZSMALLOC=y
 CONFIG_KERNEL_MEMCG_SWAP_ENABLED=y
 
-#=================================================
 # BBR
-#=================================================
 CONFIG_PACKAGE_kmod-tcp-bbr=y
 CONFIG_DEFAULT_tcp_bbr=y
 CONFIG_DEFAULT_tcp_cubic=n
 
-#=================================================
 # 文件系统基础
-#=================================================
 CONFIG_PACKAGE_block-mount=y
 CONFIG_PACKAGE_e2fsprogs=y
 CONFIG_PACKAGE_f2fsck=y
@@ -131,9 +100,7 @@ CONFIG_PACKAGE_kmod-fs-f2fs=y
 CONFIG_PACKAGE_mmc-utils=y
 CONFIG_PACKAGE_nand-utils=y
 
-#=================================================
 # 主路由网络基础
-#=================================================
 CONFIG_PACKAGE_kmod-nft-core=y
 CONFIG_PACKAGE_kmod-nft-nat=y
 CONFIG_PACKAGE_kmod-nft-tproxy=y
@@ -142,15 +109,11 @@ CONFIG_PACKAGE_kmod-nft-offload=y
 CONFIG_PACKAGE_kmod-inet-diag=y
 CONFIG_PACKAGE_kmod-netlink-diag=y
 
-#=================================================
 # 不默认开启 SQM
-#=================================================
 CONFIG_PACKAGE_luci-app-sqm=n
 CONFIG_PACKAGE_sqm-scripts-nss=n
 
-#=================================================
 # 去掉 USB
-#=================================================
 CONFIG_PACKAGE_kmod-usb-core=n
 CONFIG_PACKAGE_kmod-usb3=n
 CONFIG_PACKAGE_kmod-usb-dwc3=n
@@ -185,10 +148,7 @@ CONFIG_PACKAGE_usbmuxd=n
 CONFIG_PACKAGE_usb-modeswitch=n
 CONFIG_PACKAGE_automount=n
 
-#=================================================
 # 去掉 WiFi 用户层
-# 底层 WiFi 驱动建议继续在 IPQ60XX-WIFI.txt 里禁用
-#=================================================
 CONFIG_PACKAGE_wifi-scripts=n
 CONFIG_PACKAGE_iw=n
 CONFIG_PACKAGE_iwinfo=n
@@ -204,9 +164,7 @@ CONFIG_PACKAGE_hostapd=n
 CONFIG_PACKAGE_hostapd-common=n
 CONFIG_PACKAGE_luci-app-wireless=n
 
-#=================================================
 # 去掉大体积 / 不需要插件
-#=================================================
 CONFIG_PACKAGE_luci-app-samba4=n
 CONFIG_PACKAGE_samba4-server=n
 CONFIG_PACKAGE_luci-app-openlist2=n
