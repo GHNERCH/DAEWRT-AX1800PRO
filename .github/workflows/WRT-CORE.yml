@@ -193,10 +193,13 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
-          echo "==== Set custom Chinese firmware version ===="
+          echo "==== Force custom firmware version by rootfs overlay ===="
 
-          mkdir -p package/base-files/files/etc
-          mkdir -p package/base-files/files/etc/uci-defaults
+          mkdir -p files/etc
+          mkdir -p files/etc/uci-defaults
+          mkdir -p files/etc/init.d
+          mkdir -p files/etc/rc.d
+          mkdir -p files/usr/bin
 
           {
             printf "%s\n" "DISTRIB_ID='阿宇定制固件'"
@@ -206,36 +209,71 @@ jobs:
             printf "%s\n" "DISTRIB_ARCH='aarch64_cortex-a53'"
             printf "%s\n" "DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'"
             printf "%s\n" "DISTRIB_TAINTS=''"
-          } > package/base-files/files/etc/openwrt_release
+          } > files/etc/openwrt_release
 
-          printf "%s\n" "阿宇定制固件 兆能M2专用版" > package/base-files/files/etc/openwrt_version
+          printf "%s\n" "阿宇定制固件 兆能M2专用版" > files/etc/openwrt_version
 
           {
             printf "%s\n" "#!/bin/sh"
             printf "%s\n" ""
-            printf "%s\n" "mkdir -p /etc"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_ID='阿宇定制固件'\" > /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_RELEASE='兆能M2专用版'\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_REVISION='ZNM2'\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_TARGET='qualcommax/ipq60xx'\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_ARCH='aarch64_cortex-a53'\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"DISTRIB_TAINTS=''\" >> /etc/openwrt_release"
-            printf "%s\n" "printf \"%s\\n\" \"阿宇定制固件 兆能M2专用版\" > /etc/openwrt_version"
+            printf "%s\n" "cat > /etc/openwrt_release.tmp <<'EOR'"
+            printf "%s\n" "DISTRIB_ID='阿宇定制固件'"
+            printf "%s\n" "DISTRIB_RELEASE='兆能M2专用版'"
+            printf "%s\n" "DISTRIB_REVISION='ZNM2'"
+            printf "%s\n" "DISTRIB_TARGET='qualcommax/ipq60xx'"
+            printf "%s\n" "DISTRIB_ARCH='aarch64_cortex-a53'"
+            printf "%s\n" "DISTRIB_DESCRIPTION='阿宇定制固件 兆能M2专用版'"
+            printf "%s\n" "DISTRIB_TAINTS=''"
+            printf "%s\n" "EOR"
+            printf "%s\n" "mv /etc/openwrt_release.tmp /etc/openwrt_release"
+            printf "%s\n" "printf '%s\n' '阿宇定制固件 兆能M2专用版' > /etc/openwrt_version"
             printf "%s\n" ""
             printf "%s\n" "if [ -f /usr/lib/lua/luci/version.lua ]; then"
+            printf "%s\n" "  sed -i \"s|^distname *=.*|distname = '阿宇定制固件'|g\" /usr/lib/lua/luci/version.lua"
+            printf "%s\n" "  sed -i \"s|^distversion *=.*|distversion = '兆能M2专用版'|g\" /usr/lib/lua/luci/version.lua"
             printf "%s\n" "  sed -i \"s|^luciname *=.*|luciname = '阿宇定制面板'|g\" /usr/lib/lua/luci/version.lua"
             printf "%s\n" "  sed -i \"s|^luciversion *=.*|luciversion = '兆能M2专用版'|g\" /usr/lib/lua/luci/version.lua"
             printf "%s\n" "fi"
             printf "%s\n" ""
+            printf "%s\n" "if [ -f /usr/lib/lua/luci/version.lua ]; then"
+            printf "%s\n" "  sed -i -e \"s| / DaeWRT-[0-9A-Za-z._:-]*||g\" -e \"s|DaeWRT-[0-9A-Za-z._:-]*||g\" /usr/lib/lua/luci/version.lua"
+            printf "%s\n" "fi"
+            printf "%s\n" ""
             printf "%s\n" "exit 0"
-          } > package/base-files/files/etc/uci-defaults/99-custom-version
+          } > files/usr/bin/custom-version-apply
 
-          chmod +x package/base-files/files/etc/uci-defaults/99-custom-version
+          chmod +x files/usr/bin/custom-version-apply
 
-          echo "==== Remove DaeWRT build mark if exists ===="
+          {
+            printf "%s\n" "#!/bin/sh"
+            printf "%s\n" ""
+            printf "%s\n" "/usr/bin/custom-version-apply"
+            printf "%s\n" ""
+            printf "%s\n" "exit 0"
+          } > files/etc/uci-defaults/99-custom-version
 
-          for dir in package/base-files/files files package; do
+          chmod +x files/etc/uci-defaults/99-custom-version
+
+          {
+            printf "%s\n" "#!/bin/sh /etc/rc.common"
+            printf "%s\n" ""
+            printf "%s\n" "START=99"
+            printf "%s\n" ""
+            printf "%s\n" "boot() {"
+            printf "%s\n" "  /usr/bin/custom-version-apply"
+            printf "%s\n" "}"
+            printf "%s\n" ""
+            printf "%s\n" "start() {"
+            printf "%s\n" "  /usr/bin/custom-version-apply"
+            printf "%s\n" "}"
+          } > files/etc/init.d/custom-version
+
+          chmod +x files/etc/init.d/custom-version
+          ln -sf ../init.d/custom-version files/etc/rc.d/S99custom-version
+
+          echo "==== Remove DaeWRT build mark from source files if exists ===="
+
+          for dir in files package package/base-files feeds; do
             if [ -d "$dir" ]; then
               grep -R "DaeWRT" -n "$dir" 2>/dev/null || true
               find "$dir" -type f -print0 2>/dev/null | xargs -0 -r sed -i -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
