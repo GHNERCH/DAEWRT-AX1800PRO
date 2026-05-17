@@ -193,6 +193,18 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
+          echo "==== Force keep DAED panel and core ===="
+
+          sed -i '/CONFIG_PACKAGE_luci-app-daed/d' .config || true
+          sed -i '/CONFIG_PACKAGE_daed/d' .config || true
+          sed -i '/CONFIG_PACKAGE_dae/d' .config || true
+          sed -i '/CONFIG_PACKAGE_luci-app-dae/d' .config || true
+
+          printf "%s\n" "CONFIG_PACKAGE_luci-app-daed=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_daed=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_dae=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_luci-app-dae=n" >> .config
+
           echo "==== Force custom firmware version by rootfs overlay ===="
 
           mkdir -p files/etc
@@ -280,7 +292,29 @@ jobs:
             fi
           done
 
-          make defconfig -j$(nproc) && make clean -j$(nproc)
+          echo "==== DAED config before defconfig ===="
+          grep -E "CONFIG_PACKAGE_(luci-app-daed|daed|dae|luci-app-dae)=" .config || true
+
+          make defconfig -j$(nproc)
+
+          echo "==== Force keep DAED again after defconfig ===="
+
+          sed -i '/CONFIG_PACKAGE_luci-app-daed/d' .config || true
+          sed -i '/CONFIG_PACKAGE_daed/d' .config || true
+          sed -i '/CONFIG_PACKAGE_dae/d' .config || true
+          sed -i '/CONFIG_PACKAGE_luci-app-dae/d' .config || true
+
+          printf "%s\n" "CONFIG_PACKAGE_luci-app-daed=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_daed=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_dae=y" >> .config
+          printf "%s\n" "CONFIG_PACKAGE_luci-app-dae=n" >> .config
+
+          make defconfig -j$(nproc)
+
+          echo "==== DAED config after final defconfig ===="
+          grep -E "CONFIG_PACKAGE_(luci-app-daed|daed|dae|luci-app-dae)=" .config || true
+
+          make clean -j$(nproc)
 
       - name: Download Packages
         if: env.WRT_TEST != 'true'
@@ -293,12 +327,22 @@ jobs:
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-          wget -O dae.zip https://github.com/daeuniverse/dae/releases/download/v1.1.0/dae-linux-arm64.zip
-          unzip -j dae.zip dae-linux-arm64
+
+          echo "==== Update dae core ===="
+
           mkdir -p files/usr/bin
-          mv dae-linux-arm64 files/usr/bin/dae
+
+          DAE_TAG="v1.1.0"
+          DAE_URL="https://github.com/daeuniverse/dae/releases/download/${DAE_TAG}/dae-linux-arm64.zip"
+
+          wget -O dae.zip "$DAE_URL"
+          unzip -o -j dae.zip dae-linux-arm64
+          mv -f dae-linux-arm64 files/usr/bin/dae
           chmod +x files/usr/bin/dae
           rm -f dae.zip
+
+          echo "==== dae version ===="
+          files/usr/bin/dae --version || true
 
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
@@ -306,6 +350,20 @@ jobs:
           cd ./wrt/
 
           make -j$(nproc) || make -j1 V=s
+
+      - name: Check DAED in build result
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+
+          echo "==== Check DAED in .config ===="
+          grep -E "CONFIG_PACKAGE_(luci-app-daed|daed|dae|luci-app-dae)=" .config || true
+
+          echo "==== Check DAED in manifest ===="
+          find ./bin/targets/ -type f -name "*.manifest" -exec grep -E "^(luci-app-daed|daed|dae) " {} \; || true
+
+          echo "==== Check DAED files in rootfs ===="
+          find ./build_dir/target-*/root-* -type f \( -path "*luci*daed*" -o -path "*/usr/bin/dae" -o -path "*/usr/bin/daed" \) 2>/dev/null || true
 
       - name: Delete Old Cache
         run: |
