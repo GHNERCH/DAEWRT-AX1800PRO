@@ -67,8 +67,14 @@ UPDATE_PACKAGE "aurora-config" "eamonxg/luci-app-aurora-config" "master"
 UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "luci-app-timewol luci-app-wolplus"
 # UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
-UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix"
-UPDATE_PACKAGE "luci-app-dae" "QiuSimons/luci-app-dae" "kix"
+# daed / dae 面板与核心
+# 优先使用 QiuSimons 最新分支
+UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "main"
+UPDATE_PACKAGE "luci-app-dae" "QiuSimons/luci-app-dae" "main"
+
+# 如果 main 分支不存在或编译失败，再改回：
+# UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "kix"
+# UPDATE_PACKAGE "luci-app-dae" "QiuSimons/luci-app-dae" "kix"
 UPDATE_PACKAGE "gecoosac" "lwb1978/openwrt-gecoosac" "main"
 UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5" "" "v2dat"
 UPDATE_PACKAGE "lucky" "gdy666/luci-app-lucky" "main"
