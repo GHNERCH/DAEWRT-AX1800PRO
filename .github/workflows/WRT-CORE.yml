@@ -206,7 +206,7 @@ jobs:
       - name: Update Dae Core/Config
         run: |
           cd ./wrt/
-          wget -O dae.zip https://github.com/daeuniverse/dae/releases/download/v1.1.0/dae-linux-arm64.zip
+          wget -O dae.zip https://github.com/daeuniverse/dae/releases/download/v2.0.0/dae-linux-arm64.zip
           unzip -j dae.zip dae-linux-arm64
           mkdir -p files/usr/bin
           mv dae-linux-arm64 files/usr/bin/dae
