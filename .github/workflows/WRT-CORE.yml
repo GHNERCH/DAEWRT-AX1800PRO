@@ -1,4 +1,4 @@
-#云编译公用核心
+# 云编译公用核心
 name: WRT-CORE
 
 on:
@@ -48,25 +48,25 @@ on:
         type: string
 
 env:
-  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  WRT_CONFIG: ${{inputs.WRT_CONFIG}}
-  WRT_THEME: ${{inputs.WRT_THEME}}
-  WRT_NAME: ${{inputs.WRT_NAME}}
-  WRT_SSID: ${{inputs.WRT_SSID}}
-  WRT_WORD: ${{inputs.WRT_WORD}}
-  WRT_IP: ${{inputs.WRT_IP}}
-  WRT_PW: ${{inputs.WRT_PW}}
-  WRT_REPO: ${{inputs.WRT_REPO}}
-  WRT_BRANCH: ${{inputs.WRT_BRANCH}}
-  WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
-  WRT_TEST: ${{inputs.WRT_TEST}}
-  WRT_DIR: 'wrt'
-  CI_NAME: ${{inputs.CI_NAME}}
-  WRT_ARCH: ${{inputs.WRT_ARCH}}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  WRT_CONFIG: ${{ inputs.WRT_CONFIG }}
+  WRT_THEME: ${{ inputs.WRT_THEME }}
+  WRT_NAME: ${{ inputs.WRT_NAME }}
+  WRT_SSID: ${{ inputs.WRT_SSID }}
+  WRT_WORD: ${{ inputs.WRT_WORD }}
+  WRT_IP: ${{ inputs.WRT_IP }}
+  WRT_PW: ${{ inputs.WRT_PW }}
+  WRT_REPO: ${{ inputs.WRT_REPO }}
+  WRT_BRANCH: ${{ inputs.WRT_BRANCH }}
+  WRT_PACKAGE: ${{ inputs.WRT_PACKAGE }}
+  WRT_TEST: ${{ inputs.WRT_TEST }}
+  WRT_DIR: wrt
+  CI_NAME: ${{ inputs.CI_NAME }}
+  WRT_ARCH: ${{ inputs.WRT_ARCH }}
 
 jobs:
   core:
-    name: ${{inputs.WRT_SOURCE}}
+    name: ${{ inputs.WRT_SOURCE }}
     runs-on: ubuntu-24.04
 
     steps:
@@ -103,19 +103,19 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix libfuse-dev
-          sudo bash $GITHUB_WORKSPACE/Scripts/init_build_environment.sh
+          sudo bash "$GITHUB_WORKSPACE/Scripts/init_build_environment.sh"
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
       - name: Initialization Values
         run: |
-          echo "WRT_DATE=$(TZ=Asia/Shanghai date '+%y.%m.%d-%H.%M.%S')" >> $GITHUB_ENV
-          echo "WRT_MARK=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)" >> $GITHUB_ENV
-          echo "WRT_VER=$(echo $WRT_REPO | cut -d '/' -f 4)-$WRT_BRANCH" >> $GITHUB_ENV
-          echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt | tr '[:lower:]' '[:upper:]')" >> $GITHUB_ENV
-          echo "WRT_KVER=none" >> $GITHUB_ENV
-          echo "WRT_LIST=none" >> $GITHUB_ENV
-          echo "WRT_CI=$WRT_CI" >> $GITHUB_ENV
+          echo "WRT_DATE=$(TZ=Asia/Shanghai date '+%y.%m.%d-%H.%M.%S')" >> "$GITHUB_ENV"
+          echo "WRT_MARK=$(echo "$GITHUB_REPOSITORY" | cut -d '/' -f 1)" >> "$GITHUB_ENV"
+          echo "WRT_VER=$(echo "$WRT_REPO" | cut -d '/' -f 4)-$WRT_BRANCH" >> "$GITHUB_ENV"
+          echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' "./Config/$WRT_CONFIG.txt" | tr '[:lower:]' '[:upper:]')" >> "$GITHUB_ENV"
+          echo "WRT_KVER=none" >> "$GITHUB_ENV"
+          echo "WRT_LIST=none" >> "$GITHUB_ENV"
+          echo "WRT_CI=$WRT_CI" >> "$GITHUB_ENV"
 
           if [ -z "$WRT_ARCH" ]; then
             WRT_ARCH_FROM_CONFIG="$(grep -m 1 -oP '^CONFIG_TARGET_.+_DEVICE_\K.+(?=\=y)' "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" || true)"
@@ -124,33 +124,44 @@ jobs:
               WRT_ARCH_FROM_CONFIG="$WRT_CONFIG"
             fi
 
-            echo "WRT_ARCH=$WRT_ARCH_FROM_CONFIG" >> $GITHUB_ENV
+            echo "WRT_ARCH=$WRT_ARCH_FROM_CONFIG" >> "$GITHUB_ENV"
           else
-            echo "WRT_ARCH=$WRT_ARCH" >> $GITHUB_ENV
+            echo "WRT_ARCH=$WRT_ARCH" >> "$GITHUB_ENV"
           fi
 
           echo "$WRT_REPO/$WRT_BRANCH" > "$GITHUB_WORKSPACE/repo_flag"
 
       - name: Clone Code
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+          git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/
 
           cd ./wrt/
-          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> "$GITHUB_ENV"
 
       - name: Update Dae/Daed rules
         run: |
           cd ./wrt
+
           mkdir -p files/usr/share/dae
-          wget -O files/usr/share/dae/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
-          wget -O files/usr/share/dae/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+
+          wget -O files/usr/share/dae/geoip.dat \
+            https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+
+          wget -O files/usr/share/dae/geosite.dat \
+            https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+
           cd files/usr/share
           ln -sf dae daed
           ls -l
 
       - name: Check Scripts
         run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          find ./ \
+            -maxdepth 3 \
+            -type f \
+            -iregex ".*\(txt\|sh\)$" \
+            -exec dos2unix {} \; \
+            -exec chmod +x {} \;
 
       - name: Cache Dependencies
         uses: actions/cache@v4
@@ -165,7 +176,11 @@ jobs:
       - name: Refresh the cache
         run: |
           if [ -d "./wrt/staging_dir" ]; then
-            find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r dir; do
+            find "./wrt/staging_dir" \
+              -type d \
+              -name "stamp" \
+              -not -path "*target*" |
+            while read -r dir; do
               find "$dir" -type f -exec touch {} +
             done
           fi
@@ -181,17 +196,146 @@ jobs:
         run: |
           cd ./wrt/package/
 
-          $GITHUB_WORKSPACE/Scripts/Packages.sh
-          $GITHUB_WORKSPACE/Scripts/Handles.sh
+          "$GITHUB_WORKSPACE/Scripts/Packages.sh"
+          "$GITHUB_WORKSPACE/Scripts/Handles.sh"
+
+      - name: Prepare Daed Source With Web Submodule
+        if: env.WRT_TEST != 'true'
+        run: |
+          set -Eeuo pipefail
+
+          DAED_REPOSITORY="https://github.com/daeuniverse/daed.git"
+          DAED_COMMIT="671e65d2fdcd62fe6a3ec18ecda209c5addea898"
+          DAED_VERSION="2026.07.31"
+          DAED_SOURCE="daed-${DAED_VERSION}.tar.gz"
+
+          DAED_WORK_DIR="$RUNNER_TEMP/daed-source"
+          DAED_CLONE_DIR="$DAED_WORK_DIR/daed-${DAED_VERSION}"
+          DAED_ARCHIVE="$GITHUB_WORKSPACE/wrt/dl/$DAED_SOURCE"
+
+          echo "==== Prepare daed source ===="
+          echo "Repository: $DAED_REPOSITORY"
+          echo "Commit:     $DAED_COMMIT"
+          echo "Version:    $DAED_VERSION"
+          echo "Archive:    $DAED_ARCHIVE"
+
+          rm -rf "$DAED_WORK_DIR"
+          mkdir -p "$DAED_WORK_DIR"
+          mkdir -p "$GITHUB_WORKSPACE/wrt/dl"
+
+          git clone \
+            --recurse-submodules \
+            --shallow-submodules \
+            "$DAED_REPOSITORY" \
+            "$DAED_CLONE_DIR"
+
+          cd "$DAED_CLONE_DIR"
+
+          git checkout --detach "$DAED_COMMIT"
+
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+          WEB_DIR="$DAED_CLONE_DIR/wing/webrender/web"
+
+          if [ ! -d "$WEB_DIR" ]; then
+            echo "ERROR: daed web directory does not exist:"
+            echo "$WEB_DIR"
+            echo
+            echo "Available wing directories:"
+            find "$DAED_CLONE_DIR/wing" -maxdepth 5 -type d -print || true
+            exit 1
+          fi
+
+          WEB_FILE="$(
+            find "$WEB_DIR" \
+              -type f \
+              ! -name ".gitkeep" \
+              ! -name ".keep" \
+              -print \
+              -quit
+          )"
+
+          if [ -z "$WEB_FILE" ]; then
+            echo "ERROR: daed web directory contains no embeddable files:"
+            echo "$WEB_DIR"
+            find "$WEB_DIR" -maxdepth 5 -print || true
+            exit 1
+          fi
+
+          echo "Found web asset:"
+          echo "$WEB_FILE"
+
+          echo "==== Remove Git metadata ===="
+
+          find "$DAED_CLONE_DIR" \
+            -type d \
+            -name .git \
+            -prune \
+            -exec rm -rf {} +
+
+          rm -f "$DAED_CLONE_DIR/.gitmodules"
+
+          echo "==== Create daed source archive ===="
+
+          rm -f "$DAED_ARCHIVE"
+
+          tar \
+            --numeric-owner \
+            --owner=0 \
+            --group=0 \
+            --mode=a-s \
+            --sort=name \
+            --mtime='UTC 2026-01-01' \
+            -czf "$DAED_ARCHIVE" \
+            -C "$DAED_WORK_DIR" \
+            "daed-${DAED_VERSION}"
+
+          echo "==== Verify daed source archive ===="
+
+          rm -rf "$DAED_WORK_DIR/verify"
+          mkdir -p "$DAED_WORK_DIR/verify"
+
+          tar \
+            -xzf "$DAED_ARCHIVE" \
+            -C "$DAED_WORK_DIR/verify"
+
+          VERIFIED_WEB_FILE="$(
+            find "$DAED_WORK_DIR/verify/daed-${DAED_VERSION}/wing/webrender/web" \
+              -type f \
+              -print \
+              -quit
+          )"
+
+          if [ -z "$VERIFIED_WEB_FILE" ]; then
+            echo "ERROR: generated archive does not contain daed web assets"
+
+            tar -tzf "$DAED_ARCHIVE" |
+              grep -E "webrender/web|wing" || true
+
+            exit 1
+          fi
+
+          echo "Verified web asset:"
+          echo "$VERIFIED_WEB_FILE"
+
+          echo "==== Source archive information ===="
+          ls -lh "$DAED_ARCHIVE"
+          sha256sum "$DAED_ARCHIVE"
+
+          echo "==== Archive web files ===="
+          tar -tzf "$DAED_ARCHIVE" |
+            grep "daed-${DAED_VERSION}/wing/webrender/web/" |
+            head -30
 
       - name: Custom Settings
         run: |
-          . $GITHUB_WORKSPACE/Scripts/function.sh
+          . "$GITHUB_WORKSPACE/Scripts/function.sh"
           cd ./wrt/
 
           generate_config && cat .config
 
-          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          "$GITHUB_WORKSPACE/Scripts/Settings.sh"
 
           echo "==== Force keep DAED panel and core ===="
 
@@ -288,7 +432,13 @@ jobs:
           for dir in files package package/base-files feeds; do
             if [ -d "$dir" ]; then
               grep -R "DaeWRT" -n "$dir" 2>/dev/null || true
-              find "$dir" -type f -print0 2>/dev/null | xargs -0 -r sed -i -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
+
+              find "$dir" \
+                -type f \
+                -print0 2>/dev/null |
+              xargs -0 -r sed -i \
+                -e "s| / DaeWRT-[0-9A-Za-z._:-]*||g" \
+                -e "s|DaeWRT-[0-9A-Za-z._:-]*||g"
             fi
           done
 
@@ -320,6 +470,13 @@ jobs:
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
+
+          echo "==== Verify daed archive before make download ===="
+
+          test -f dl/daed-2026.07.31.tar.gz
+
+          tar -tzf dl/daed-2026.07.31.tar.gz |
+            grep -m 1 "daed-2026.07.31/wing/webrender/web/"
 
           make download -j$(nproc)
 
@@ -360,10 +517,19 @@ jobs:
           grep -E "CONFIG_PACKAGE_(luci-app-daed|daed|dae|luci-app-dae)=" .config || true
 
           echo "==== Check DAED in manifest ===="
-          find ./bin/targets/ -type f -name "*.manifest" -exec grep -E "^(luci-app-daed|daed|dae) " {} \; || true
+          find ./bin/targets/ \
+            -type f \
+            -name "*.manifest" \
+            -exec grep -E "^(luci-app-daed|daed|dae) " {} \; || true
 
           echo "==== Check DAED files in rootfs ===="
-          find ./build_dir/target-*/root-* -type f \( -path "*luci*daed*" -o -path "*/usr/bin/dae" -o -path "*/usr/bin/daed" \) 2>/dev/null || true
+          find ./build_dir/target-* \
+            -type f \
+            \( \
+              -path "*luci*daed*" \
+              -o -path "*/usr/bin/dae" \
+              -o -path "*/usr/bin/daed" \
+            \) 2>/dev/null || true
 
       - name: Delete Old Cache
         run: |
@@ -377,14 +543,18 @@ jobs:
 
           echo "Cache prefix: $CACHE_PREFIX"
 
-          gh cache list --key "$CACHE_PREFIX" --json key --jq '.[] | .key' | while read -r key; do
+          gh cache list \
+            --key "$CACHE_PREFIX" \
+            --json key \
+            --jq '.[] | .key' |
+          while read -r key; do
             if [ -n "$key" ]; then
               echo "Deleting cache: $key"
               gh cache delete -- "$key" || true
             fi
           done
 
-          echo "========cache status========"
+          echo "======== cache status ========"
           echo "ccache: $(du -sh ./wrt/.ccache 2>/dev/null | cut -f 1 || echo 0)"
           echo "staging: $(du -sh ./wrt/staging_dir 2>/dev/null | cut -f 1 || echo 0)"
 
@@ -405,22 +575,30 @@ jobs:
           cd ./wrt/
           mkdir -p ./upload/
 
-          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_VER"-"$WRT_DATE".txt
+          cp -f \
+            ./.config \
+            ./upload/Config-"$WRT_CONFIG"-"$WRT_VER"-"$WRT_DATE".txt
 
           if [[ $WRT_TEST != 'true' ]]; then
-            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
-            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
+            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> "$GITHUB_ENV"
 
-            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> "$GITHUB_ENV"
 
-            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
-              EXT=$(basename $FILE | cut -d '.' -f 2-)
-              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
+            find ./bin/targets/ \
+              -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" \
+              -exec rm -rf {} +
+
+            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*"); do
+              EXT=$(basename "$FILE" | cut -d '.' -f 2-)
+              NAME=$(basename "$FILE" | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
               NEW_FILE="$WRT_VER"-"$NAME"-"$WRT_DATE"."$EXT"
-              mv -f $FILE ./upload/$NEW_FILE
+
+              mv -f "$FILE" "./upload/$NEW_FILE"
             done
 
-            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
+            find ./bin/targets/ \
+              -type f \
+              -exec mv -f {} ./upload/ \;
 
             make clean -j$(nproc)
           fi
@@ -428,25 +606,25 @@ jobs:
       - name: Release Firmware
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{env.CI_NAME}}-${{env.WRT_CONFIG}}_${{env.WRT_DATE}}
+          tag_name: ${{ env.CI_NAME }}-${{ env.WRT_CONFIG }}_${{ env.WRT_DATE }}
           files: ./wrt/upload/*.*
           body: |
             兆能 M2 专属定制固件包
             默认主题：Aurora
-            默认地址：${{env.WRT_IP}}
+            默认地址：${{ env.WRT_IP }}
 
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            提交：${{env.WRT_HASH}}
+            源码：${{ env.WRT_REPO }}
+            分支：${{ env.WRT_BRANCH }}
+            提交：${{ env.WRT_HASH }}
 
-            配置：${{env.WRT_CONFIG}}
-            平台：${{env.WRT_TARGET}}
+            配置：${{ env.WRT_CONFIG }}
+            平台：${{ env.WRT_TARGET }}
 
-            登录地址：${{env.WRT_IP}}
-            登录密码：${{env.WRT_PW}}
+            登录地址：${{ env.WRT_IP }}
+            登录密码：${{ env.WRT_PW }}
 
-            WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
+            WIFI名称：${{ env.WRT_SSID }}
+            WIFI密码：${{ env.WRT_WORD }}
 
-            内核版本：${{env.WRT_KVER}}
-            插件列表：${{env.WRT_LIST}}
+            内核版本：${{ env.WRT_KVER }}
+            插件列表：${{ env.WRT_LIST }}
